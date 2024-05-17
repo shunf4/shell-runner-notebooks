@@ -23,6 +23,111 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
+		"configuration": {
+            "title": "Shell Runner Notebooks Config",
+            "properties": {
+				"shell-runner-notebooks.extTermConfig": {
+                    "title": "External Terminal Config Map",
+                    "type": "object",
+                    "default": {
+						"default": "cygsh",
+						"cygsh": {
+							"extTermExecPath": "C:/cygwin64/bin/mintty.exe",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"unused": [
+								"-h",
+								"always"
+							],
+							"extTermExecArgs": [
+								"-t",
+								"Cygwin [ShellRun]",
+								"-h",
+								"never",
+								"--position",
+								"@1",
+								"-o",
+								"StatusLine=true",
+								"-e",
+								"/bin/bash",
+								"-c",
+								"/bin/bash -noprofile --rcfile <(/bin/cat /etc/profile; echo; /bin/cat ~/.profile; echo; echo cd \"$(/bin/cygpath -u \"$(/bin/pwd -P)\")\"; echo) -i \"$1\"; EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:Cygwin [ShellRun]\\a\"; read -p \"Error, pausing...\"; read; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:Cygwin [ShellRun]\\a\"; read -p Pausing...; read; exit 0; fi ; exit 0",
+								"arg0"
+							]
+						},
+						"cyg": "cygsh",
+						"bbsh": {
+							"extTermExecPath": "C:/cygwin64/bin/mintty.exe",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"extTermExecArgs": [
+								"-t",
+								"Ash (Busybox) [ShellRun]",
+								"--position",
+								"@1",
+								"-o",
+								"FontHeight=11",
+								"--size",
+								"95,30",
+								"-o",
+								"StatusLine=true",
+								"-e",
+								"busybox",
+								"bash",
+								"-c",
+								"HOME= bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"arg0"
+							]
+						},
+						"bb": "bbsh",
+						"bbconhost": {
+							"extTermExecPath": "conhost",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"extTermExecArgs": [
+								"busybox",
+								"bash",
+								"-c",
+								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"arg0"
+							]
+						},
+						"bat": {
+							"extTermExecPath": "C:\\Windows\\System32\\cmd.exe",
+							"extTermTempScriptExtension": ".bat",
+							"extTermExecArgs": [
+								"/k"
+							]
+						},
+						"cmd": "bat",
+						"xf": {
+							"extTermExecPath": "xfce4-terminal",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"extTermExecArgs": [
+								"-x",
+								"bash",
+								"-c",
+								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"arg0"
+							]
+						},
+						"x": {
+							"extTermExecPath": "x-terminal-emulator",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"extTermExecArgs": [
+								"-x",
+								"bash",
+								"-c",
+								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"arg0"
+							]
+						}
+					}
+                }
+            }
+        },
 		"notebooks": [
 			{
 				"type": "pwshnb",
@@ -60,10 +165,10 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "yarn run package",
+		"xxxxxxxxxxxxvscode:prepublish": "yarn run package",
 		"compile": "webpack --config ./build/node-extension.webpack.config.js",
 		"watch": "webpack --watch --config ./build/node-extension.webpack.config.js",
-		"package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
+		"package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js && npx vsce package",
 		"test-compile": "tsc -p ./",
 		"test-watch": "tsc -watch -p ./",
 		"pretest": "yarn run test-compile && yarn run lint",
@@ -83,7 +188,7 @@
 		"ts-loader": "^9.2.6",
 		"typescript": "^4.4.3",
 		"vscode-test": "^1.6.1",
-		"webpack": "^5.56.0",
-		"webpack-cli": "^4.8.0"
+		"webpack": "^5.91.0",
+		"webpack-cli": "^5.1.0"
 	}
 }

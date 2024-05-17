@@ -1,10 +1,15 @@
 import { NotebookCellData, NotebookCellKind, NotebookData, NotebookSerializer } from "vscode";
 
 function createCell(cellKind: NotebookCellKind, source: string[]): NotebookCellData {
-	return new NotebookCellData(
+	const n = new NotebookCellData(
 		cellKind,
 		source.join('\n'),
 		cellKind === NotebookCellKind.Markup ? "markdown" : "shellscript");
+
+    if (!n.metadata) {
+        n.metadata = {};
+    }
+    return n;
 }
 
 export class ShNotebookSerializer implements NotebookSerializer {
@@ -27,9 +32,48 @@ export class ShNotebookSerializer implements NotebookSerializer {
             lineEnding = '\n';
         }
 
+        // not implemented
+        // let notebookGlobalExtTermMetadata = {};
+
         let currentCellSource: string[] = [];
         let cellKind: NotebookCellKind | undefined;
         let insideBlockComment: boolean = false;
+
+        let lastCodeLineIsEmpty = false;
+        let lastButOneCodeLineIsEmpty = false;
+
+        const endIfNeededAndStartBlock = (kind: NotebookCellKind) => {
+            // If cellKind has a value, then we can add the cell we've just computed.
+            if (cellKind) {
+                if (cellKind === NotebookCellKind.Code) {
+                    if (currentCellSource.length > 0 && currentCellSource[currentCellSource.length - 1].trim() === '') {
+                        currentCellSource.pop();
+                    }
+                    if (currentCellSource.length > 0 && currentCellSource[currentCellSource.length - 1].trim() === '') {
+                        currentCellSource.pop();
+                    }
+                }
+                cells.push(createCell(
+                    cellKind,
+                    currentCellSource,
+                ));
+            }
+
+            lastCodeLineIsEmpty = false;
+            lastButOneCodeLineIsEmpty = false;
+
+            // set initial new cell state
+            currentCellSource = [];
+            cellKind = kind;
+        }
+
+        const removePrefixForMarkdown = (line: string) => {
+            line = line.substring(line.indexOf("#") + 1);
+            if (line.length > 0 && line[0] === ' ') {
+                line = line.substring(1);
+            }
+            return line;
+        }
 
 
         // This dictates whether the BlockComment cell was read in with content on the same
@@ -42,24 +86,54 @@ export class ShNotebookSerializer implements NotebookSerializer {
         for (let i = 0; i < lines.length; i++) {
             // Handle everything else (regular comments and code)
             // If a line starts with # it's a comment
-            const kind: NotebookCellKind = lines[i].startsWith("#") ? NotebookCellKind.Markup : NotebookCellKind.Code;
+
+            const lineTrim = lines[i].trimStart();
+            const startsWithHash = lineTrim.startsWith("#");
+
+            const lineIsExtTermDirective = !startsWithHash ? false : (lineTrim.substring(1).trim().split(":::", 2)[0] === "et" && (currentCellSource.length === 0 || currentCellSource.every(x => x.trim() === '' || lastCodeLineIsEmpty && lastButOneCodeLineIsEmpty)));
+
+            const kind: NotebookCellKind = (startsWithHash && !lineIsExtTermDirective) ? NotebookCellKind.Markup : NotebookCellKind.Code;
+
+            let shouldStartNewBlock = false;
 
             // If this line is a continuation of the previous cell type, then add this line to the current cell source.
             if (kind === cellKind) {
-                currentCellSource.push(kind === NotebookCellKind.Markup && !insideBlockComment ? lines[i].replace(/^\#\s*/, "") : lines[i]);
-            } else {
-                // If cellKind has a value, then we can add the cell we've just computed.
-                if (cellKind) {
-                    cells.push(createCell(
-                        cellKind,
-                        currentCellSource
-                    ));
+                if (kind === NotebookCellKind.Code && lastCodeLineIsEmpty && lastButOneCodeLineIsEmpty) {
+                    if (currentCellSource.length > 0) {
+                        currentCellSource.pop();
+                    }
+                    if (currentCellSource.length > 0) {
+                        currentCellSource.pop();
+                    }
+                    
+                    shouldStartNewBlock = true;
+                } else {
+                    shouldStartNewBlock = false;
                 }
+            } else {
+                shouldStartNewBlock = true;
+            }
 
-                // set initial new cell state
-                currentCellSource = [];
-                cellKind = kind;
-                currentCellSource.push(kind === NotebookCellKind.Markup ? lines[i].replace(/^\#\s*/, "") : lines[i]);
+            let lastIsCodeAndCurrIsMarkup = false;
+
+            if (shouldStartNewBlock) {
+                if (kind === NotebookCellKind.Code && cellKind === NotebookCellKind.Markup) {
+                    lastIsCodeAndCurrIsMarkup = true;
+                }
+                endIfNeededAndStartBlock(kind);
+            }
+
+            
+
+            if (lastIsCodeAndCurrIsMarkup && lineTrim === '') {
+                // treat as the separator between a markdown and a code
+            } else {
+                currentCellSource.push(kind === NotebookCellKind.Markup && !insideBlockComment ? removePrefixForMarkdown(lines[i]) : lines[i]);
+
+                if (kind == NotebookCellKind.Code) {
+                    lastButOneCodeLineIsEmpty = lastCodeLineIsEmpty;
+                    lastCodeLineIsEmpty = (lineTrim === '');
+                }
             }
         }
 
@@ -69,7 +143,7 @@ export class ShNotebookSerializer implements NotebookSerializer {
         if (currentCellSource.length) {
             cells.push(createCell(
                 cellKind!,
-                currentCellSource
+                currentCellSource,
             ));
         }
 
@@ -84,12 +158,22 @@ export class ShNotebookSerializer implements NotebookSerializer {
 
     serializeNotebook(data: NotebookData): Uint8Array {
         const retArr: string[] = [];
+        let lastCellKind;
         for (const cell of data.cells) {
+            switch (lastCellKind) {
+                case NotebookCellKind.Code:
+                    retArr.push('', '');
+                    break;
+                case NotebookCellKind.Markup:
+                    retArr.push('');
+                    break;
+            }
             if (cell.kind === NotebookCellKind.Code) {
                 retArr.push(...cell.value.split(/\r\n|\n/));
             } else {
                 retArr.push(...cell.value.split(/\r\n|\n/).map((line) => `# ${line}`));
             }
+            lastCellKind = cell.kind;
         }
 
         const eol: string = data.metadata?.custom.lineEnding;
