@@ -75,7 +75,7 @@
 								"busybox",
 								"bash",
 								"-c",
-								"HOME= bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"HOME= bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
 								"arg0"
 							]
 						},
@@ -88,7 +88,7 @@
 								"busybox",
 								"bash",
 								"-c",
-								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
 								"arg0"
 							]
 						},
@@ -108,7 +108,7 @@
 								"-x",
 								"bash",
 								"-c",
-								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
 								"arg0"
 							]
 						},
@@ -120,7 +120,7 @@
 								"-x",
 								"bash",
 								"-c",
-								"bash -i -l -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
+								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
 								"arg0"
 							]
 						}

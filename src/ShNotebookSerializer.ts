@@ -41,6 +41,7 @@ export class ShNotebookSerializer implements NotebookSerializer {
 
         let lastCodeLineIsEmpty = false;
         let lastButOneCodeLineIsEmpty = false;
+        let lastLineIsEmpty = undefined;
 
         const endIfNeededAndStartBlock = (kind: NotebookCellKind) => {
             // If cellKind has a value, then we can add the cell we've just computed.
@@ -92,7 +93,7 @@ export class ShNotebookSerializer implements NotebookSerializer {
 
             const lineIsExtTermDirective = !startsWithHash ? false : (lineTrim.substring(1).trim().split(":::", 2)[0] === "et" && (currentCellSource.length === 0 || currentCellSource.every(x => x.trim() === '' || lastCodeLineIsEmpty && lastButOneCodeLineIsEmpty)));
 
-            const kind: NotebookCellKind = (startsWithHash && !lineIsExtTermDirective) ? NotebookCellKind.Markup : NotebookCellKind.Code;
+            const kind: NotebookCellKind = (startsWithHash && (!lineIsExtTermDirective) && ((lastLineIsEmpty === undefined || lastLineIsEmpty === true) || cellKind === NotebookCellKind.Markup)) ? NotebookCellKind.Markup : NotebookCellKind.Code;
 
             let shouldStartNewBlock = false;
 
@@ -135,6 +136,8 @@ export class ShNotebookSerializer implements NotebookSerializer {
                     lastCodeLineIsEmpty = (lineTrim === '');
                 }
             }
+
+            lastLineIsEmpty = (lineTrim === '');
         }
 
         // If we have some leftover lines that have not been added (for example,
