@@ -23,7 +23,7 @@ function createCell(cellKind: NotebookCellKind, source: string[], metadata: IPow
 }
 
 export class PowerShellNotebookSerializer implements NotebookSerializer {
-    static type: string = 'pwshnb';
+    static type: string = 'pwshnbx';
 
     deserializeNotebook(data: Uint8Array): NotebookData {
         const cells: NotebookCellData[] = [];

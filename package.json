@@ -24,83 +24,172 @@
 	"main": "./dist/extension.js",
 	"contributes": {
 		"configuration": {
-            "title": "Shell Runner Notebooks Config",
-            "properties": {
+			"title": "Shell Runner Notebooks Config",
+			"properties": {
 				"shell-runner-notebooks.extTermConfig": {
-                    "title": "External Terminal Config Map",
-                    "type": "object",
-                    "default": {
+					"title": "External Terminal Config Map",
+					"type": "object",
+					"extTermEnvOverride": {},
+					"default": {
 						"default": "cygsh",
+						"varMap": {},
 						"cygsh": {
-							"extTermExecPath": "C:/cygwin64/bin/mintty.exe",
+							"languageId": "shellscript",
+							"varMap": {},
+							"extTermExecPath": "[[[MinttyPath:C:/cygwin64/bin/mintty.exe]]]",
 							"extTermSpawnShell": false,
+							"extTermExecArgsPatchInsertion0": [],
+							"extTermExecArgsPatchInsertion1": [],
 							"extTermTempScriptExtension": ".sh",
-							"unused": [
-								"-h",
-								"always"
+							"Comments": [
+								"Mintty with `-h always` never exits automatically.",
+								"Mintty gives a correct Cygwin HOME env var if initially it's blank.",
+								"But some VSCode extension like ms-dotnettools.vscode-dotnet-runtime will set HOME env var for THE VERY EXTENSION-HOST PROCESS. It has to be cancelled for cygwin to work."
 							],
+							"extTermEnvOverride": {
+								"HOME": ""
+							},
 							"extTermExecArgs": [
 								"-t",
-								"Cygwin [ShellRun]",
+								"[SR:Cygwin]",
 								"-h",
-								"never",
+								"[[[MinttyHold:never]]]",
 								"--position",
-								"@1",
+								"[[[MinttyPos:center]]]",
 								"-o",
-								"StatusLine=true",
+								"StatusLine=[[[MinttyStatusLine:false]]]",
+								"[[[PatchInsertion1]]]",
 								"-e",
 								"/bin/bash",
 								"-c",
-								"/bin/bash -noprofile --rcfile <(/bin/cat /etc/profile; echo; /bin/cat ~/.profile; echo; echo cd \"$(/bin/cygpath -u \"$(/bin/pwd -P)\")\"; echo) -i \"$1\"; EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:Cygwin [ShellRun]\\a\"; read -p \"Error, pausing...\"; read; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:Cygwin [ShellRun]\\a\"; read -p Pausing...; read; exit 0; fi ; exit 0",
-								"arg0"
-							]
+								"/bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_cygwin_bash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Cygwin]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Cygwin]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_cygwin_bash",
+								"cd \"$1\"; . \"$2\";"
+							],
+							"runConfVariant": {
+								"-x": {
+									"varMap": {
+										"UseX": "-x"
+									}
+								}
+							}
 						},
 						"cyg": "cygsh",
 						"bbsh": {
-							"extTermExecPath": "C:/cygwin64/bin/mintty.exe",
+							"languageId": "shellscript",
+							"extTermExecPath": "[[[MinttyPath:C:/cygwin64/bin/mintty.exe]]]",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".sh",
+							"extTermEnvOverride": {
+								"HOME": ""
+							},
+							"Comments": [
+								"Mintty gives a Cygwin HOME env var if initially it's blank. So in busybox case the HOME env var must be reset.",
+								"Busybox ash detects if it is launched from a native Windows environment from the case of PATH and COMSPEC variable. If not, proper user env var initialization wouldn't be done."
+							],
+							"extTermExecArgs": [
+								"-t",
+								"[SR:AshBusybox]",
+								"-h",
+								"[[[MinttyHold:never]]]",
+								"--position",
+								"[[[MinttyPos:center]]]",
+								"-o",
+								"StatusLine=[[[MinttyStatusLine:false]]]",
+								"[[[PatchInsertion1]]]",
+								"-e",
+								"[[[BusyboxPath:which(busybox)]]]",
+								"bash",
+								"-c",
+								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_ash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_bb_ash",
+								"cd \"$1\"; . \"$2\";"
+							],
+							"runConfVariant": {
+								"-x": {
+									"varMap": {
+										"UseX": "-x"
+									}
+								}
+							}
+						},
+						"bb": "bbsh",
+						"bbraw": {
+							"languageId": "shellscript",
+							"extTermExecPath": "rundll32",
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
 							"extTermExecArgs": [
-								"-t",
-								"Ash (Busybox) [ShellRun]",
-								"--position",
-								"@1",
-								"-o",
-								"FontHeight=11",
-								"--size",
-								"95,30",
-								"-o",
-								"StatusLine=true",
-								"-e",
-								"busybox",
+								"shell32.dll,ShellExec_RunDLL",
+								"[[[BusyboxPath:which(busybox)]]]",
 								"bash",
+								"[[[PatchInsertion1]]]",
 								"-c",
-								"HOME= bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
-								"arg0"
+								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_cmd \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_bb_cmd",
+								"cd \"$1\"; . \"$2\";"
 							]
 						},
-						"bb": "bbsh",
 						"bbconhost": {
+							"languageId": "shellscript",
 							"extTermExecPath": "conhost",
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
 							"extTermExecArgs": [
-								"busybox",
+								"[[[BusyboxPath:which(busybox)]]]",
 								"bash",
+								"[[[PatchInsertion1]]]",
 								"-c",
-								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
-								"arg0"
+								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_conhost \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_bb_conhost",
+								"cd \"$1\"; . \"$2\";"
 							]
 						},
 						"bat": {
-							"extTermExecPath": "C:\\Windows\\System32\\cmd.exe",
-							"extTermTempScriptExtension": ".bat",
-							"extTermExecArgs": [
-								"/k"
-							]
+							"languageId": "bat",
+							"extTermExecPath": "C:\\Windows\\System32\\cmd.exe /v /c \"title [SR:CMD] & \"[[[ScriptFile]]]\" & echo/ & echo/=========== & SET SAVEDERRORLEVEL=!ERRORLEVEL! & echo Errorlevel: !SAVEDERRORLEVEL! & pause \"",
+							"extTermSpawnShell": true,
+							"extTermWindowsVerbatimArguments": true,
+							"extTermTempScriptExtension": ".bat"
 						},
 						"cmd": "bat",
+						"powershell": {
+							"languageId": "powershell",
+							"extTermExecPath": "rundll32",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".ps1",
+							"extTermExecArgs": [
+								"shell32.dll,ShellExec_RunDLL",
+								"powershell",
+								"[[[PatchInsertion1]]]",
+								"-File"
+							]
+						},
+						"powershellshell": {
+							"languageId": "powershell",
+							"extTermExecPath": "powershell",
+							"extTermSpawnShell": true,
+							"extTermTempScriptExtension": ".ps1",
+							"extTermExecArgs": [
+								"[[[PatchInsertion1]]]",
+								"-File"
+							]
+						},
+						"powershellraw": {
+							"languageId": "powershell",
+							"extTermExecPath": "powershell",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".ps1",
+							"extTermExecArgs": [
+								"[[[PatchInsertion1]]]",
+								"-File"
+							]
+						},
+						"pwsh": "powershell",
+						"ps1": "powershell",
+						"ps": "powershell",
 						"xf": {
+							"languageId": "shellscript",
 							"extTermExecPath": "xfce4-terminal",
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
@@ -108,11 +197,20 @@
 								"-x",
 								"bash",
 								"-c",
-								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
-								"arg0"
-							]
+								"echo -en \"\\033]0;[SR:BashXfT]\\a\";            /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_xf_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXfT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXfT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_xf_bash",
+								"cd \"$1\"; . \"$2\";"
+							],
+							"runConfVariant": {
+								"-x": {
+									"varMap": {
+										"UseX": "-x"
+									}
+								}
+							}
 						},
 						"x": {
+							"languageId": "shellscript",
 							"extTermExecPath": "x-terminal-emulator",
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
@@ -120,21 +218,146 @@
 								"-x",
 								"bash",
 								"-c",
-								"bash -i -c \"\\\"$1\\\"\" arg0 \"$1\"; EXIT_CODE=$? ; echo ; echo ===========; echo Exit code ${EXIT_CODE} ; read;",
-								"arg0"
-							]
+								"echo -en \"\\033]0;[SR:BashXT]\\a\";            /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_x_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_x_bash",
+								"cd \"$1\"; . \"$2\";"
+							],
+							"runConfVariant": {
+								"-x": {
+									"varMap": {
+										"UseX": "-x"
+									}
+								}
+							}
+						},
+						"mtany": {
+							"extTermExecPath": "[[[MinttyPath:C:/cygwin64/bin/mintty.exe]]]",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".txt",
+							"extTermEnvOverride": {
+								"HOME": ""
+							},
+							"languageId": "plaintext",
+							"extTermExecArgsPatchInsertion1": [
+								"rundll32",
+								"url.dll,FileProtocolHandler"
+							],
+							"extTermExecArgs": [
+								"-t",
+								"<<<MinttyTitle:[SR:MtAny]>>>",
+								"-h",
+								"[[[MinttyHold:never]]]",
+								"--position",
+								"[[[MinttyPos:center]]]",
+								"-o",
+								"StatusLine=[[[MinttyStatusLine:false]]]",
+								"[[[PatchInsertion0]]]",
+								"-e",
+								"[[[BusyboxPath:which(busybox)]]]",
+								"bash",
+								"-c",
+								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_mt_any \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_mt_any",
+								"cd \"$1\"; shift; shift; \"$@\";",
+								"[[[PatchInsertion1]]]"
+							],
+							"runConfVariant": {
+								"node": {
+									"languageId": "javascript",
+									"extTermTempScriptExtension": ".js",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"node"
+									],
+									"varMap": {
+										"MinttyTitle": "[SR:NodeJS]"
+									}
+								},
+								"js": "node",
+								"javascript": "node",
+								"nodejs": "node",
+								"tsnode": {
+									"languageId": "typescript",
+									"extTermTempScriptExtension": ".ts",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"ts-node"
+									],
+									"varMap": {
+										"MinttyTitle": "[SR:TsNode]"
+									}
+								},
+								"ts": "tsnode",
+								"typescript": "node",
+								"nodets": "tsnode",
+
+								"python": {
+									"languageId": "python",
+									"extTermTempScriptExtension": ".py",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"python"
+									],
+									"varMap": {
+										"MinttyTitle": "[SR:Python]"
+									}
+								},
+								"py": "python",
+								"python3": {
+									"languageId": "python",
+									"extTermTempScriptExtension": ".py",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"python3"
+									],
+									"varMap": {
+										"MinttyTitle": "[SR:Python3]"
+									}
+								},
+								"py3": "python3"
+							}
 						}
 					}
-                }
-            }
-        },
+				},
+				"shell-runner-notebooks.extTermConfigPatch": {
+					"title": "External Terminal Config Map Patch",
+					"type": "object",
+					"default": {
+						"default": "cygsh",
+						"varMap": {
+							"MinttyPath": "C:/cygwin64/bin/mintty.exe",
+							"MinttyPos": "center"
+						},
+						"extTermEnvOverride": {},
+						"cygsh": {
+							"varMap": {},
+							"extTermEnvOverride": {},
+							"extTermExecArgsPatchInsertion0": [],
+							"extTermExecArgsPatchInsertion1": []
+						},
+						"cyg": "cygsh",
+						"bbsh": {
+							"extTermExecArgsPatchInsertion0": [
+								"--size",
+								"95,30",
+								"-o",
+								"FontHeight=11"
+							]
+						},
+						"x": {
+							"extTermExecPath": "x-terminal-emulator"
+						}
+					}
+				}
+			}
+		},
 		"notebooks": [
 			{
-				"type": "pwshnb",
-				"displayName": "PowerShell Runner Notebook",
+				"type": "pwshnbx",
+				"displayName": "PowerShell Runner Notebook (Deprecated)",
 				"selector": [
 					{
-						"filenamePattern": "*.notebook.ps1"
+						"filenamePattern": "*.notebookx.ps1"
 					}
 				]
 			},
@@ -150,6 +373,63 @@
 					},
 					{
 						"filenamePattern": "*.notebook.zsh"
+					}
+				]
+			},
+			{
+				"type": "sh-batnb",
+				"displayName": "Shell(Bat) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.bat"
+					},
+					{
+						"filenamePattern": "*.notebook.cmd"
+					}
+				]
+			},
+			{
+				"type": "sh-pwshnb",
+				"displayName": "Shell(Powershell) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.ps1"
+					}
+				]
+			},
+			{
+				"type": "sh-pynb",
+				"displayName": "Shell(Python) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.py"
+					}
+				]
+			},
+			{
+				"type": "sh-jsnb",
+				"displayName": "Shell(JavaScript) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.js"
+					}
+				]
+			},
+			{
+				"type": "sh-tsnb",
+				"displayName": "Shell(TypeScript) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.ts"
+					}
+				]
+			},
+			{
+				"type": "sh-gennb",
+				"displayName": "Shell(General) Runner Notebook",
+				"selector": [
+					{
+						"filenamePattern": "*.notebook.txt"
 					}
 				]
 			},
@@ -180,6 +460,7 @@
 		"@types/mocha": "^9.0.0",
 		"@types/node": "^12.20.13",
 		"@types/vscode": "1.60.0",
+		"@types/which": "^3.0.3",
 		"@typescript-eslint/eslint-plugin": "^4.32.0",
 		"@typescript-eslint/parser": "^4.32.0",
 		"eslint": "^7.32.0",
@@ -190,5 +471,9 @@
 		"vscode-test": "^1.6.1",
 		"webpack": "^5.91.0",
 		"webpack-cli": "^5.1.0"
+	},
+	"dependencies": {
+		"mergician": "^2.0.2",
+		"which": "^4.0.0"
 	}
 }
