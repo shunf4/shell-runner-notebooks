@@ -52,9 +52,9 @@
 							"extTermExecArgs": [
 								"-t",
 								"[SR:Cygwin]",
-								"-h",
+								"[[[MinttyHoldOpt:-h]]]",
 								"[[[MinttyHold:never]]]",
-								"--position",
+								"[[[MinttyPositionOpt:--position]]]",
 								"[[[MinttyPos:center]]]",
 								"-o",
 								"StatusLine=[[[MinttyStatusLine:false]]]",
@@ -62,9 +62,9 @@
 								"-e",
 								"/bin/bash",
 								"-c",
-								"/bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_cygwin_bash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Cygwin]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Cygwin]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"/bin/bash -i -l -c \"$1\" shell_runner_cygwin_bash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Cygwin]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Cygwin]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_cygwin_bash",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							],
 							"runConfVariant": {
 								"-x": {
@@ -90,9 +90,9 @@
 							"extTermExecArgs": [
 								"-t",
 								"[SR:AshBusybox]",
-								"-h",
+								"[[[MinttyHoldOpt:-h]]]",
 								"[[[MinttyHold:never]]]",
-								"--position",
+								"[[[MinttyPositionOpt:--position]]]",
 								"[[[MinttyPos:center]]]",
 								"-o",
 								"StatusLine=[[[MinttyStatusLine:false]]]",
@@ -101,9 +101,9 @@
 								"[[[BusyboxPath:which(busybox)]]]",
 								"bash",
 								"-c",
-								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_ash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_bb_ash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_bb_ash",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							],
 							"runConfVariant": {
 								"-x": {
@@ -125,9 +125,9 @@
 								"bash",
 								"[[[PatchInsertion1]]]",
 								"-c",
-								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_cmd \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_bb_cmd \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_bb_cmd",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							]
 						},
 						"bbconhost": {
@@ -140,9 +140,9 @@
 								"bash",
 								"[[[PatchInsertion1]]]",
 								"-c",
-								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_bb_conhost \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"echo -en \"\\033]0;[SR:AshBusybox]\\a\";             /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_bb_conhost \"$(/bin/pwd -P)\" \"$2\" ;                EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_bb_conhost",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							]
 						},
 						"bat": {
@@ -162,6 +162,38 @@
 								"shell32.dll,ShellExec_RunDLL",
 								"powershell",
 								"[[[PatchInsertion1]]]",
+								"[[[PowershellNoExit:-NoExit]]]",
+								"-File"
+							]
+						},
+						"mtpowershell": {
+							"languageId": "powershell",
+							"extTermExecPath": "[[[MinttyPath:C:/cygwin64/bin/mintty.exe]]]",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".ps1",
+							"extTermEnvOverride": {
+								"HOME": ""
+							},
+							"extTermExecArgs": [
+								"-t",
+								"[SR:Ps1]",
+								"[[[MinttyHoldOpt:-h]]]",
+								"[[[MinttyHold:never]]]",
+								"[[[MinttyPositionOpt:--position]]]",
+								"[[[MinttyPos:center]]]",
+								"-o",
+								"StatusLine=[[[MinttyStatusLine:false]]]",
+								"[[[PatchInsertion0]]]",
+								"-e",
+								"[[[BusyboxPath:which(busybox)]]]",
+								"bash",
+								"-c",
+								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_ps1 \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Ps1]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Ps1]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_ps1",
+								"cd \"$1\"; shift; shift; \"$@\";",
+								"powershell",
+								"[[[PatchInsertion1]]]",
+								"<<<PowershellNoExit:(((ShNb:CancelArg)))>>>",
 								"-File"
 							]
 						},
@@ -197,9 +229,9 @@
 								"-x",
 								"bash",
 								"-c",
-								"echo -en \"\\033]0;[SR:BashXfT]\\a\";            /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_xf_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXfT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXfT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"echo -en \"\\033]0;[SR:BashXfT]\\a\";            /bin/bash -i -l -c \"$1\" shell_runner_xf_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXfT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXfT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_xf_bash",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							],
 							"runConfVariant": {
 								"-x": {
@@ -218,9 +250,9 @@
 								"-x",
 								"bash",
 								"-c",
-								"echo -en \"\\033]0;[SR:BashXT]\\a\";            /bin/bash -i -l [[[UseX:]]] -c \"$1\" shell_runner_x_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"echo -en \"\\033]0;[SR:BashXT]\\a\";            /bin/bash -i -l -c \"$1\" shell_runner_x_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_x_bash",
-								"cd \"$1\"; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							],
 							"runConfVariant": {
 								"-x": {
@@ -245,9 +277,9 @@
 							"extTermExecArgs": [
 								"-t",
 								"<<<MinttyTitle:[SR:MtAny]>>>",
-								"-h",
+								"[[[MinttyHoldOpt:-h]]]",
 								"[[[MinttyHold:never]]]",
-								"--position",
+								"[[[MinttyPositionOpt:--position]]]",
 								"[[[MinttyPos:center]]]",
 								"-o",
 								"StatusLine=[[[MinttyStatusLine:false]]]",

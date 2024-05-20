@@ -7,7 +7,6 @@ import { NotebookSerializer } from './NotebookSerializer';
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import { TextEncoder } from 'util';
-import * as mergician from 'mergician';
 import * as which from 'which';
 
 const VAR_MAP_REPLACE_REGEX = new RegExp(/\[\[\[([^:]+):(.*?)\]\]\]/g);
@@ -48,19 +47,42 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 		const patchedConfig = COMMON_MERGICIAN(config, configPatch);
 
 		let notebookGlobalExtTermOpts: any = {};
-		let isNotebookGlobalHaveTermOpts: boolean = false;
+		let isHaveFirstCellAndHaveTermOpts: boolean = false;
+		let savedFirstCellTermOpts: any = undefined;
+		let isNotebookGlobalHaveTermOpts: boolean | undefined = undefined;
 
 		if (notebook.cellCount > 0) {
 			for (const firstCellLines of notebook.cellAt(0).document.getText().split('\n')) {
 				const lTrimStart = firstCellLines.trimStart();
 				if (lTrimStart !== '') {
 					const parseFirstCellDirectiveResult = ShNotebookSerializer.parseExtTermDirective(lTrimStart, true, patchedConfig, defaultExtTermRunConfParam ?? "default");
-					if ((parseFirstCellDirectiveResult.isLineExtTermDirective ?? false) && (parseFirstCellDirectiveResult.isDirectiveNotebookGlobal ?? false)) {
-						notebookGlobalExtTermOpts = parseFirstCellDirectiveResult.cellExtTermOpts;
-						isNotebookGlobalHaveTermOpts = true;
+					if ((parseFirstCellDirectiveResult.isLineExtTermDirective ?? false)) {
+						isHaveFirstCellAndHaveTermOpts = true;
+						savedFirstCellTermOpts = parseFirstCellDirectiveResult.cellExtTermOpts;
+						if (parseFirstCellDirectiveResult.isDirectiveNotebookGlobal ?? false) {
+							notebookGlobalExtTermOpts = savedFirstCellTermOpts;
+							isNotebookGlobalHaveTermOpts = true;
+						}
+					} else {
+						// has other line than directive, make isNotebookGlobalHaveTermOpts false if undefined
+							if (isNotebookGlobalHaveTermOpts === undefined) {
+								isNotebookGlobalHaveTermOpts = false;
+							}
 					}
 				}
 			}
+			if (isNotebookGlobalHaveTermOpts === undefined
+				&& isHaveFirstCellAndHaveTermOpts) {
+				isNotebookGlobalHaveTermOpts = true;
+				notebookGlobalExtTermOpts = savedFirstCellTermOpts ?? {};
+			}
+			if (isNotebookGlobalHaveTermOpts === false) {
+				notebookGlobalExtTermOpts = {};
+			}
+		} else {
+			isNotebookGlobalHaveTermOpts = false;
+			isHaveFirstCellAndHaveTermOpts = false;
+			notebookGlobalExtTermOpts = {};
 		}
 
 		if (cells.length > 3) {
@@ -169,7 +191,10 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 							const old = effectiveArgs;
 							effectiveArgs = [];
 							for (const x of old) {
-								effectiveArgs.push(await replaceWithVarMap(varMap, x));
+								const replacedArgs = await replaceWithVarMap(varMap, x);
+								if (replacedArgs !== '(((ShNb:CancelArg)))' && replacedArgs !== '{{{ShNb:CancelArg}}}') {
+									effectiveArgs.push(replacedArgs);
+								}
 							}
 						}
 						effectiveArgs.push(tempScript.fsPath);
@@ -320,7 +345,7 @@ export function activate(context: vscode.ExtensionContext) {
 		return mutated;
 	};
 	for (const notebookType of ['shnb', 'sh-batnb', 'sh-pwshnb', 'sh-pynb', 'sh-jsnb', 'sh-tsnb', 'sh-gennb']) {
-		const shController = vscode.notebooks.createNotebookController('shellfile-kernel-' + notebookType, notebookType, `ShellRunner (${notebookType}`);
+		const shController = vscode.notebooks.createNotebookController('shellfile-kernel-' + notebookType, notebookType, `ShellRunner (${notebookType})`);
 		shController.supportedLanguages = supportedLanguagesWithThisAsFirst(nbTypeToLangIdMap[notebookType]);
 		shController.executeHandler = getExecuteHandler(shController, nbTypeToDefaultExtTermRunConfParamMap[notebookType]);
 		context.subscriptions.push(shController);

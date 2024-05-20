@@ -2,7 +2,8 @@ import * as mergician from "mergician";
 import * as vscode from "vscode";
 import { NotebookCellData, NotebookCellKind, NotebookData, NotebookSerializer } from "vscode";
 
-const EXT_TERM_DIRECTIVE_LONG_REGEX = new RegExp(/\[\[\[ShNb:(Et:?.*)\]\]\]/i);
+const EXT_TERM_DIRECTIVE_LONG_REGEX = new RegExp(/\(\(\(ShNb:(Et:?.*)\)\)\)/i);
+const EXT_TERM_DIRECTIVE_LONG_REGEX_2 = new RegExp(/{{{ShNb:(Et:?.*)}}}/i);
 export const COMMON_MERGICIAN = mergician.mergician({
     prependArrays: false,
     appendArrays: false,
@@ -45,6 +46,14 @@ export class ShNotebookSerializer implements NotebookSerializer {
                 directiveBody = splitNGolangLike(tryMatch[1], ':', 2);
                 if (directiveBody[0].toLowerCase() !== 'et') {
                     directiveBody = undefined;
+                }
+            } else {
+                const tryMatch2 = lTrimStart.match(EXT_TERM_DIRECTIVE_LONG_REGEX_2);
+                if (tryMatch2) {
+                    directiveBody = splitNGolangLike(tryMatch2[1], ':', 2);
+                    if (directiveBody[0].toLowerCase() !== 'et') {
+                        directiveBody = undefined;
+                    }
                 }
             }
         }
@@ -249,7 +258,8 @@ export class ShNotebookSerializer implements NotebookSerializer {
             if (currLineIsBlank) {
                 lineIsMarkdownDirective = false;
             } else {
-                if (line.toLowerCase().indexOf("[[[shnb:md]]]") > -1
+                if (line.toLowerCase().indexOf("(((shnb:md)))") > -1
+                    || line.toLowerCase().indexOf("{{{shnb:md}}}") > -1
                     || (lineTrim.startsWith('#') && lineTrim.substring(1).trimLeft().split(':', 2)[0].toLowerCase() === 'md')) {
                     if (currentCellSource.length === 0
                         || currentCellSource.every(x => x.trim() === '')
