@@ -3,7 +3,7 @@
 	"publisher": "tylerleonhardt",
 	"displayName": "Shell Runner Notebooks",
 	"description": "Load, run, and edit shell scripts in a Notebook-like experience.",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"license": "MIT",
 	"homepage": "https://github.com/TylerLeonhardt/shell-runner-notebooks",
 	"repository": {
