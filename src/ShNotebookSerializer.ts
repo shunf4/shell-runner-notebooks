@@ -1,9 +1,10 @@
 import * as mergician from "mergician";
 import * as vscode from "vscode";
 import { NotebookCellData, NotebookCellKind, NotebookData, NotebookSerializer } from "vscode";
+import * as os from 'os';
 
-const EXT_TERM_DIRECTIVE_LONG_REGEX = new RegExp(/\(\(\(ShNb:(Et:?.*)\)\)\)/i);
-const EXT_TERM_DIRECTIVE_LONG_REGEX_2 = new RegExp(/{{{ShNb:(Et:?.*)}}}/i);
+const EXT_TERM_DIRECTIVE_LONG_REGEX = new RegExp(/\(\(\(ShNb:((?:No)?Et:?.*)\)\)\)/i);
+const EXT_TERM_DIRECTIVE_LONG_REGEX_2 = new RegExp(/{{{ShNb:((?:No)Et:?.*)}}}/i);
 export const COMMON_MERGICIAN = mergician.mergician({
     prependArrays: false,
     appendArrays: false,
@@ -29,11 +30,13 @@ export class ShNotebookSerializer implements NotebookSerializer {
     static parseExtTermDirective(lTrimStart: string, prerequisite: boolean, patchedConfig: any, defaultRunConfParam: string): {
         isDirectiveNotebookGlobal: boolean | undefined,
         isLineExtTermDirective: boolean | undefined,
+        isLineDenyExtTermDirective: boolean | undefined,
         isUsingDefault: boolean | undefined,
         cellExtTermOpts: any | undefined,
         runConfVariantIdent: string | undefined,
     } {
         let isLineExtTermDirective: boolean | undefined = undefined;
+        let isLineDenyExtTermDirective: boolean | undefined = undefined;
         let isDirectiveNotebookGlobal: boolean | undefined = undefined;
         let isUsingDefault: boolean | undefined = undefined;
         let cellExtTermOpts: any | undefined = undefined;
@@ -44,14 +47,16 @@ export class ShNotebookSerializer implements NotebookSerializer {
             const tryMatch = lTrimStart.match(EXT_TERM_DIRECTIVE_LONG_REGEX);
             if (tryMatch) {
                 directiveBody = splitNGolangLike(tryMatch[1], ':', 2);
-                if (directiveBody[0].toLowerCase() !== 'et') {
+                const db0lower = directiveBody[0].toLowerCase();
+                if (db0lower !== 'et' && db0lower !== 'noet') {
                     directiveBody = undefined;
                 }
             } else {
                 const tryMatch2 = lTrimStart.match(EXT_TERM_DIRECTIVE_LONG_REGEX_2);
                 if (tryMatch2) {
                     directiveBody = splitNGolangLike(tryMatch2[1], ':', 2);
-                    if (directiveBody[0].toLowerCase() !== 'et') {
+                    const db0lower = directiveBody[0].toLowerCase();
+                    if (db0lower !== 'et' && db0lower !== 'noet') {
                         directiveBody = undefined;
                     }
                 }
@@ -61,83 +66,90 @@ export class ShNotebookSerializer implements NotebookSerializer {
             if (lTrimStart.startsWith('#')) {
                 const lTrimHash = lTrimStart.substring(1).trim();
                 directiveBody = splitNGolangLike(lTrimHash, ':', 2);
-                if (directiveBody[0].toLowerCase() !== 'et') {
+                const db0lower = directiveBody[0].toLowerCase();
+                if (db0lower !== 'et' && db0lower !== 'noet') {
                     directiveBody = undefined;
                 }
             }
         }
 
         if (prerequisite && directiveBody !== undefined) {
-            isLineExtTermDirective = true;
-            if (cellExtTermOpts === undefined) {
-                cellExtTermOpts = {};
-            }
+            if (directiveBody[0].toLowerCase() === 'noet') {
+                isLineExtTermDirective = false;
+                isLineDenyExtTermDirective = true;
+            } else {
+                isLineExtTermDirective = true;
+                if (cellExtTermOpts === undefined) {
+                    cellExtTermOpts = {};
+                }
 
-            let runConfParam: string | undefined = undefined;
-            isDirectiveNotebookGlobal = false;
-            if (directiveBody.length === 2) {
-                if (directiveBody[1].startsWith('notebookGlobal:')) {
-                    directiveBody[1] = directiveBody[1].substring('notebookGlobal:'.length);
-                    isDirectiveNotebookGlobal = true;
-                    runConfParam = directiveBody[1];
-                } else if (directiveBody[1] === 'notebookGlobal') {
+                let runConfParam: string | undefined = undefined;
+                isDirectiveNotebookGlobal = false;
+                if (directiveBody.length === 2) {
+                    if (directiveBody[1].startsWith('notebookGlobal:')) {
+                        directiveBody[1] = directiveBody[1].substring('notebookGlobal:'.length);
+                        isDirectiveNotebookGlobal = true;
+                        runConfParam = directiveBody[1];
+                    } else if (directiveBody[1] === 'notebookGlobal') {
+                        runConfParam = undefined;
+                        isDirectiveNotebookGlobal = true;
+                    } else {
+                        runConfParam = directiveBody[1];
+                    }
+                } else if (directiveBody.length === 1) {
                     runConfParam = undefined;
-                    isDirectiveNotebookGlobal = true;
-                } else {
-                    runConfParam = directiveBody[1];
                 }
-            } else if (directiveBody.length === 1) {
-                runConfParam = undefined;
-            }
 
-            isUsingDefault = runConfParam === undefined;
-            if (runConfParam === undefined) {
-                runConfParam = defaultRunConfParam;
-            }
+                isUsingDefault = runConfParam === undefined;
+                if (runConfParam === undefined) {
+                    runConfParam = defaultRunConfParam;
+                }
 
-            if (runConfParam) {
-                let directiveJson;
-                try {
-                    directiveJson = JSON.parse(runConfParam);
-                } catch (e) {
-                    directiveJson = (patchedConfig ?? {} as any)[runConfParam];
-                    const extraParamSplitAgain = splitNGolangLike(runConfParam, ':', 2);
-                    if (!directiveJson && extraParamSplitAgain.length >= 2) {
-                        directiveJson = (patchedConfig ?? {} as any)[extraParamSplitAgain[0]];
-                        runConfVariantIdent = extraParamSplitAgain[1];
+                if (runConfParam) {
+                    let directiveJson;
+                    try {
+                        directiveJson = JSON.parse(runConfParam);
+                    } catch (e) {
+                        directiveJson = (patchedConfig ?? {} as any)[runConfParam];
+                        const extraParamSplitAgain = splitNGolangLike(runConfParam, ':', 2);
+                        if (!directiveJson && extraParamSplitAgain.length >= 2) {
+                            directiveJson = (patchedConfig ?? {} as any)[extraParamSplitAgain[0]];
+                            runConfVariantIdent = extraParamSplitAgain[1];
+                        }
+                        if (typeof directiveJson === 'string') {
+                            directiveJson = (patchedConfig ?? {} as any)[directiveJson];
+                        }
                     }
-                    if (typeof directiveJson === 'string') {
-                        directiveJson = (patchedConfig ?? {} as any)[directiveJson];
+                    
+                    if (!directiveJson || typeof directiveJson !== 'object') {
+                        directiveJson = {};
+                    }
+                    cellExtTermOpts = {...cellExtTermOpts, ...directiveJson};
+                }
+
+                if (runConfVariantIdent) {
+                    const tryGetRunConfVariant = (cellExtTermOpts?.runConfVariant??{})[runConfVariantIdent];
+                    if (typeof tryGetRunConfVariant === 'string') {
+                        runConfVariantIdent = tryGetRunConfVariant;
+                    } else if (typeof tryGetRunConfVariant === 'object') {
+                    } else {
+                        runConfVariantIdent = undefined;
                     }
                 }
-                
-                if (!directiveJson || typeof directiveJson !== 'object') {
-                    directiveJson = {};
-                }
-                cellExtTermOpts = {...cellExtTermOpts, ...directiveJson};
-            }
 
-            if (runConfVariantIdent) {
-                const tryGetRunConfVariant = (cellExtTermOpts?.runConfVariant??{})[runConfVariantIdent];
-                if (typeof tryGetRunConfVariant === 'string') {
-                    runConfVariantIdent = tryGetRunConfVariant;
-                } else if (typeof tryGetRunConfVariant === 'object') {
-                } else {
-                    runConfVariantIdent = undefined;
+                if (runConfVariantIdent) {
+                    cellExtTermOpts = {
+                        ...cellExtTermOpts,
+                        ...((cellExtTermOpts?.runConfVariant??{})[runConfVariantIdent] ?? {})
+                    };
                 }
-            }
-
-            if (runConfVariantIdent) {
-                cellExtTermOpts = {
-                    ...cellExtTermOpts,
-                    ...((cellExtTermOpts?.runConfVariant??{})[runConfVariantIdent] ?? {})
-                };
             }
         }
 
         return {
             cellExtTermOpts,
             isLineExtTermDirective,
+            isLineDenyExtTermDirective,
             isDirectiveNotebookGlobal,
             runConfVariantIdent,
             isUsingDefault,
@@ -167,7 +179,9 @@ export class ShNotebookSerializer implements NotebookSerializer {
     deserializeNotebook(data: Uint8Array): NotebookData {
         const config = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfig");
 		const configPatch = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigPatch");
-		const patchedConfig = COMMON_MERGICIAN(config, configPatch);
+        const configExtraPatch1 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraHostnamePatchMap") ?? {} as any)[os.hostname()] ?? {};
+		const configExtraPatch2 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraEnvPatchMap") ?? {} as any)[process.env["SHELL_RUNNER_NOTEBOOKS_ENV"] || ''] ?? {};
+		const patchedConfig = COMMON_MERGICIAN(config, configPatch, configExtraPatch1, configExtraPatch2);
         
         const cells: NotebookCellData[] = [];
         const str = Buffer.from(data).toString();
@@ -238,7 +252,7 @@ export class ShNotebookSerializer implements NotebookSerializer {
             const lineTrim = line.trimStart();
             const currLineIsBlank = lineTrim === '';
 
-            const { cellExtTermOpts, isLineExtTermDirective } = ShNotebookSerializer.parseExtTermDirective(
+            const { cellExtTermOpts, isLineExtTermDirective, isLineDenyExtTermDirective } = ShNotebookSerializer.parseExtTermDirective(
                 lineTrim,
                 !currLineIsBlank
                     && (

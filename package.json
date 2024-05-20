@@ -225,9 +225,16 @@
 							"extTermExecPath": "xfce4-terminal",
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
+							"Comments": [
+								"The --norc and -i flag is to workaround a possibly-bug in GNU/Linux:",
+								"When using /bin/bash -x -c '/bin/bash --noprofile --norc -x -i -c \"/bin/echo a\"; read'",
+								"the read doesn't work, bash instead STOPS itself (by some signal that causes stop?)"
+							],
 							"extTermExecArgs": [
 								"-x",
 								"bash",
+								"--norc",
+								"-i",
 								"-c",
 								"echo -en \"\\033]0;[SR:BashXfT]\\a\";            /bin/bash -i -l -c \"$1\" shell_runner_xf_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXfT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXfT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_xf_bash",
@@ -247,8 +254,10 @@
 							"extTermSpawnShell": false,
 							"extTermTempScriptExtension": ".sh",
 							"extTermExecArgs": [
-								"-x",
+								"-e",
 								"bash",
+								"--norc",
+								"-i",
 								"-c",
 								"echo -en \"\\033]0;[SR:BashXT]\\a\";            /bin/bash -i -l -c \"$1\" shell_runner_x_bash \"$(/bin/pwd -P)\" \"$2\" ;                    EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:BashXT]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:BashXT]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_x_bash",
@@ -275,8 +284,6 @@
 								"url.dll,FileProtocolHandler"
 							],
 							"extTermExecArgs": [
-								"-t",
-								"<<<MinttyTitle:[SR:MtAny]>>>",
 								"[[[MinttyHoldOpt:-h]]]",
 								"[[[MinttyHold:never]]]",
 								"[[[MinttyPositionOpt:--position]]]",
@@ -287,8 +294,10 @@
 								"-e",
 								"[[[BusyboxPath:which(busybox)]]]",
 								"bash",
+								"--norc",
+								"-i",
 								"-c",
-								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_mt_any \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"echo -en \"\\033]0;<<<MinttyTitle:[SR:MtAny]>>>\\a\";               /bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_mt_any \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:<<<MinttyTitle:[SR:MtAny]>>>\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_mt_any",
 								"cd \"$1\"; shift; shift; \"$@\";",
 								"[[[PatchInsertion1]]]"
@@ -322,7 +331,6 @@
 								"ts": "tsnode",
 								"typescript": "node",
 								"nodets": "tsnode",
-
 								"python": {
 									"languageId": "python",
 									"extTermTempScriptExtension": ".py",
@@ -348,7 +356,89 @@
 								},
 								"py3": "python3"
 							}
-						}
+						},
+						"xany": {
+							"extTermExecPath": "x-terminal-emulator",
+							"extTermSpawnShell": false,
+							"extTermTempScriptExtension": ".txt",
+							"extTermEnvOverride": {
+								"HOME": ""
+							},
+							"languageId": "plaintext",
+							"extTermExecArgsPatchInsertion1": [
+								"bash",
+								"-c",
+								"mousepad \"$1\" &",
+								"x_any_bash_mousepad_runner"
+							],
+							"extTermExecArgs": [
+								"[[[PatchInsertion0]]]",
+								"-e",
+								"bash",
+								"--norc",
+								"-i",
+								"-c",
+								"echo -en \"\\033]0;<<<XtTitle:[SR:XAny]>>>\\a\";               /bin/bash -i -l -c \"$1\" shell_runner_x_any \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:<<<XtTitle:[SR:XAny]>>>\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:<<<XtTitle:[SR:XAny]>>>\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"shell_runner_x_any",
+								"cd \"$1\"; shift; shift; \"$@\";",
+								"[[[PatchInsertion1]]]"
+							],
+							"runConfVariant": {
+								"node": {
+									"languageId": "javascript",
+									"extTermTempScriptExtension": ".js",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"node"
+									],
+									"varMap": {
+										"XtTitle": "[SR:NodeJS]"
+									}
+								},
+								"js": "node",
+								"javascript": "node",
+								"nodejs": "node",
+								"tsnode": {
+									"languageId": "typescript",
+									"extTermTempScriptExtension": ".ts",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"ts-node"
+									],
+									"varMap": {
+										"XtTitle": "[SR:TsNode]"
+									}
+								},
+								"ts": "tsnode",
+								"typescript": "node",
+								"nodets": "tsnode",
+								"python": {
+									"languageId": "python",
+									"extTermTempScriptExtension": ".py",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"python"
+									],
+									"varMap": {
+										"XtTitle": "[SR:Python]"
+									}
+								},
+								"py": "python",
+								"python3": {
+									"languageId": "python",
+									"extTermTempScriptExtension": ".py",
+									"extTermExecArgsPatchInsertion0": [],
+									"extTermExecArgsPatchInsertion1": [
+										"python3"
+									],
+									"varMap": {
+										"XtTitle": "[SR:Python3]"
+									}
+								},
+								"py3": "python3"
+							}
+						},
+						"runany": "mtany"
 					}
 				},
 				"shell-runner-notebooks.extTermConfigPatch": {
@@ -378,6 +468,131 @@
 						},
 						"x": {
 							"extTermExecPath": "x-terminal-emulator"
+						},
+						"runany": "mtany"
+					}
+				},
+				"shell-runner-notebooks.extTermConfigExtraHostnamePatchMap": {
+					"title": "External Terminal Config Extra Map Patch By Hostname",
+					"type": "object",
+					"examples": [{
+						"Output of node -e \"console.log(require('os').hostname())\"": {},
+						"MyPC1": {
+							"default": "cygsh",
+							"varMap": {
+								"MinttyPath": "C:/cygwin64/bin/mintty.exe",
+								"MinttyPos": "center"
+							},
+							"extTermEnvOverride": {},
+							"cygsh": {
+								"varMap": {},
+								"extTermEnvOverride": {},
+								"extTermExecArgsPatchInsertion0": [],
+								"extTermExecArgsPatchInsertion1": []
+							},
+							"bbsh": {
+								"extTermExecArgsPatchInsertion0": [
+									"--size",
+									"95,30",
+									"-o",
+									"FontHeight=11"
+								]
+							},
+							"x": {
+								"extTermExecPath": "x-terminal-emulator"
+							},
+							"runany": "mtany"
+						}
+					}],
+					"default": {
+						"Output of node -e \"console.log(require('os').hostname())\"": {},
+						"MyPC1": {
+							"default": "cygsh",
+							"varMap": {
+								"MinttyPath": "C:/cygwin64/bin/mintty.exe",
+								"MinttyPos": "center"
+							},
+							"extTermEnvOverride": {},
+							"cygsh": {
+								"varMap": {},
+								"extTermEnvOverride": {},
+								"extTermExecArgsPatchInsertion0": [],
+								"extTermExecArgsPatchInsertion1": []
+							},
+							"bbsh": {
+								"extTermExecArgsPatchInsertion0": [
+									"--size",
+									"95,30",
+									"-o",
+									"FontHeight=11"
+								]
+							},
+							"x": {
+								"extTermExecPath": "x-terminal-emulator"
+							},
+							"runany": "mtany"
+						}
+					}
+				},
+				"shell-runner-notebooks.extTermConfigExtraEnvPatchMap": {
+					"title": "External Terminal Config Extra Map Patch By Env",
+					"type": "object",
+					"examples": [{
+						"Value of environment variable SHELL_RUNNER_NOTEBOOKS_ENV": {},
+						"MyEnv1": {
+							"default": "cygsh",
+							"varMap": {
+								"MinttyPath": "C:/cygwin64/bin/mintty.exe",
+								"MinttyPos": "center"
+							},
+							"extTermEnvOverride": {},
+							"cygsh": {
+								"varMap": {},
+								"extTermEnvOverride": {},
+								"extTermExecArgsPatchInsertion0": [],
+								"extTermExecArgsPatchInsertion1": []
+							},
+							"bbsh": {
+								"extTermExecArgsPatchInsertion0": [
+									"--size",
+									"95,30",
+									"-o",
+									"FontHeight=11"
+								]
+							},
+							"x": {
+								"extTermExecPath": "x-terminal-emulator"
+							},
+							"runany": "mtany"
+						}
+					}],
+					"default": {
+						"Value of environment variable SHELL_RUNNER_NOTEBOOKS_ENV": {},
+						"MyEnv1": {
+							"default": "cygsh",
+							"varMap": {
+								"MinttyPath": "C:/cygwin64/bin/mintty.exe",
+								"MinttyPos": "center"
+							},
+							"extTermEnvOverride": {},
+							"cygsh": {
+								"varMap": {},
+								"extTermEnvOverride": {},
+								"extTermExecArgsPatchInsertion0": [],
+								"extTermExecArgsPatchInsertion1": []
+							},
+							"bbsh": {
+								"extTermExecArgsPatchInsertion0": [
+									"--size",
+									"95,30",
+									"-o",
+									"FontHeight=11"
+								]
+							},
+							"x": {
+								"extTermExecPath": "x-terminal-emulator"
+							},
+							"runany": "mtany"
 						}
 					}
 				}

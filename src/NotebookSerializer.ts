@@ -1,6 +1,7 @@
 import { TextDecoder, TextEncoder } from 'util';
 import * as vscode from 'vscode';
 import { COMMON_MERGICIAN, ShNotebookSerializer } from './ShNotebookSerializer';
+import * as os from 'os';
 
 interface RawNotebookCell {
 	language: string;
@@ -47,7 +48,9 @@ export class NotebookSerializer implements vscode.NotebookSerializer {
 
 		const config = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfig");
 		const configPatch = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigPatch");
-		const patchedConfig = COMMON_MERGICIAN(config, configPatch);
+		const configExtraPatch1 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraHostnamePatchMap") ?? {} as any)[os.hostname()] ?? {};
+		const configExtraPatch2 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraEnvPatchMap") ?? {} as any)[process.env["SHELL_RUNNER_NOTEBOOKS_ENV"] || ''] ?? {};
+		const patchedConfig = COMMON_MERGICIAN(config, configPatch, configExtraPatch1, configExtraPatch2);
 
         // Create array of Notebook cells for the VS Code API from file contents
 		const cells = await raw.reduce(async (memo, item) => {

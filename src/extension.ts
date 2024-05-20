@@ -8,6 +8,7 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import { TextEncoder } from 'util';
 import * as which from 'which';
+import * as os from 'os';
 
 const VAR_MAP_REPLACE_REGEX = new RegExp(/\[\[\[([^:]+):(.*?)\]\]\]/g);
 const VAR_MAP_REPLACE_REGEX_2 = new RegExp(/<<<([^:]+):(.*?)>>>/g);
@@ -44,7 +45,9 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 
 		const config = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfig");
 		const configPatch = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigPatch");
-		const patchedConfig = COMMON_MERGICIAN(config, configPatch);
+		const configExtraPatch1 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraHostnamePatchMap") ?? {} as any)[os.hostname()] ?? {};
+		const configExtraPatch2 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraEnvPatchMap") ?? {} as any)[process.env["SHELL_RUNNER_NOTEBOOKS_ENV"] || ''] ?? {};
+		const patchedConfig = COMMON_MERGICIAN(config, configPatch, configExtraPatch1, configExtraPatch2);
 
 		let notebookGlobalExtTermOpts: any = {};
 		let isHaveFirstCellAndHaveTermOpts: boolean = false;
@@ -104,14 +107,17 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 
 			const cellLines = cellContent.split('\n');
 			const cellExtTermContentLines = [];
+			const filteredCellContentLines = [];
 			let nonSpaceMet = false;
 			for (const l of cellLines) {
 				const lTrimStart = l.trimStart();
 				if (lTrimStart === '') {
 					cellExtTermContentLines.push(l);
+					filteredCellContentLines.push(l);
 					continue;
 				}
 				let isLineExtTermDirective = false;
+				let isLineDenyExtTermDirective = false;
 
 				const parseExtTermResult = ShNotebookSerializer.parseExtTermDirective(
 					lTrimStart,
@@ -121,6 +127,7 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 				);
 
 				isLineExtTermDirective = parseExtTermResult.isLineExtTermDirective ?? isLineExtTermDirective;
+				isLineDenyExtTermDirective = parseExtTermResult.isLineDenyExtTermDirective ?? isLineDenyExtTermDirective;
 				runConfVariantIdent = parseExtTermResult.runConfVariantIdent ?? runConfVariantIdent;
 
 				if (isLineExtTermDirective && parseExtTermResult.cellExtTermOpts !== undefined) {
@@ -133,8 +140,12 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 				
 				if (isLineExtTermDirective) {
 					isExtTerm = true;
+					filteredCellContentLines.push(l);
+				} else if (isLineDenyExtTermDirective) {
+					isExtTerm = false;
 				} else {
 					cellExtTermContentLines.push(l);
+					filteredCellContentLines.push(l);
 				}
 				nonSpaceMet = true;
 			}
@@ -258,7 +269,7 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 					console.error(e);
 				}
 			} else {
-				vscode.window.activeTerminal!.sendText(cellContent);
+				vscode.window.activeTerminal!.sendText(filteredCellContentLines.join('\n'));
 			}
 
 			execution.end(undefined);
@@ -300,15 +311,15 @@ export function activate(context: vscode.ExtensionContext) {
 		{ transientOutputs: true }));
 	context.subscriptions.push(registerNotebookSerializerAndMemoTypeInfo(
 		"sh-pynb",
-		new ShNotebookSerializer("python", "mtany:python"),
+		new ShNotebookSerializer("python", "runany:python"),
 		{ transientOutputs: true }));
 	context.subscriptions.push(registerNotebookSerializerAndMemoTypeInfo(
 		"sh-jsnb",
-		new ShNotebookSerializer("javascript", "mtany:node"),
+		new ShNotebookSerializer("javascript", "runany:node"),
 		{ transientOutputs: true }));
 	context.subscriptions.push(registerNotebookSerializerAndMemoTypeInfo(
 		"sh-tsnb",
-		new ShNotebookSerializer("typescript", "mtany:tsnode"),
+		new ShNotebookSerializer("typescript", "runany:tsnode"),
 		{ transientOutputs: true }));
 	context.subscriptions.push(registerNotebookSerializerAndMemoTypeInfo(
 		"sh-gennb",
