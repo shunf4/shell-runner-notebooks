@@ -472,7 +472,7 @@
 					"title": "External Terminal Config Extra Map Patch By Hostname",
 					"type": "object",
 					"examples": [{
-						"Output of node -e \"console.log(require('os').hostname())\"": {},
+						"Output of node -p \"require('os').hostname()\"": {},
 						"MyPC1": {
 							"default": "cygsh",
 							"varMap": {
