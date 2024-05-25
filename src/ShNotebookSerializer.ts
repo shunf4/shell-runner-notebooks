@@ -2,6 +2,7 @@ import * as mergician from "mergician";
 import * as vscode from "vscode";
 import { NotebookCellData, NotebookCellKind, NotebookData, NotebookSerializer } from "vscode";
 import * as os from 'os';
+import * as fs from 'fs';
 
 const EXT_TERM_DIRECTIVE_LONG_REGEX = new RegExp(/\(\(\(ShNb:((?:No)?Et:?.*)\)\)\)/i);
 const EXT_TERM_DIRECTIVE_LONG_REGEX_2 = new RegExp(/{{{ShNb:((?:No)Et:?.*)}}}/i);
@@ -176,11 +177,30 @@ export class ShNotebookSerializer implements NotebookSerializer {
         return n;
     }
 
-    deserializeNotebook(data: Uint8Array): NotebookData {
-        const config = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfig");
-		const configPatch = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigPatch");
-        const configExtraPatch1 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraHostnamePatchMap") ?? {} as any)[os.hostname()] ?? {};
+    async deserializeNotebook(data: Uint8Array): Promise<NotebookData> {
+        const configPatch = vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigPatch");
+		const configExtraPatch1 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraHostnamePatchMap") ?? {} as any)[os.hostname()] ?? {};
 		const configExtraPatch2 = (vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfigExtraEnvPatchMap") ?? {} as any)[process.env["SHELL_RUNNER_NOTEBOOKS_ENV"] || ''] ?? {};
+
+		const defaultConfigOverwriteByFile = (configExtraPatch2??{} as any)["defaultConfigOverwriteByFile"] || (configExtraPatch1??{} as any)["defaultConfigOverwriteByFile"] || (configPatch??{} as any)["defaultConfigOverwriteByFile"];
+
+		const config = await (async () => {
+			try {
+				if (defaultConfigOverwriteByFile) {
+					const defConfigOverrideFileContent = await fs.promises.readFile(defaultConfigOverwriteByFile, {encoding: 'utf-8'});
+					let defConfigOverrideJson = JSON.parse(defConfigOverrideFileContent);
+					if (defConfigOverrideJson.contributes) {
+						defConfigOverrideJson = defConfigOverrideJson.contributes.configuration.properties["shell-runner-notebooks.extTermConfig"].default;
+					}
+					return defConfigOverrideJson;
+				}
+			} catch (e) {
+				console.error("ShellRunnerNotebooks: trying to read and parse defaultConfigOverwriteByFile", e);
+			}
+
+			return vscode.workspace.getConfiguration("shell-runner-notebooks").get<object>("extTermConfig");
+		})();
+
 		const patchedConfig = COMMON_MERGICIAN(config, configPatch, configExtraPatch1, configExtraPatch2);
         
         const cells: NotebookCellData[] = [];
