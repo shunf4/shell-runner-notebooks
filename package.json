@@ -121,7 +121,7 @@
 								"-c",
 								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" ENV=\"${USERPROFILE}/.profile\" /bin/bash -c \"$1\" shell_runner_bb_ash \"$(/bin/pwd -P)\" \"$2\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:AshBusybox]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:AshBusybox]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_bb_ash",
-								"env; cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
+								"cd \"$1\"; set -x +x [[[UseX:]]]; . \"$2\";"
 							],
 							"runConfVariant": {
 								"-x": {
