@@ -192,6 +192,7 @@
 							"extTermEnvOverride": {
 								"HOME": ""
 							},
+							"EXPLANATION: The Usage of -X: powershell fails to call Desktop .lnk -> exe with slash USERPROFILE env": "",
 							"extTermExecArgs": [
 								"-t",
 								"[SR:Ps1]",
@@ -205,8 +206,9 @@
 								"-e",
 								"[[[BusyboxPath:which(busybox)]]]",
 								"bash",
+								"-X",
 								"-c",
-								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -i -l -c \"$1\" shell_runner_ps1 \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Ps1]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Ps1]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
+								"/bin/env -u HOME -u PATH -u COMSPEC Path=\"$PATH\" ComSpec=\"$COMSPEC\" /bin/bash -X -i -l -c \"$1\" shell_runner_ps1 \"$(/bin/pwd -P)\" \"$@\" ;                     EXIT_CODE=$? ; echo; echo ===========; echo Exit code ${EXIT_CODE} ; if [ $EXIT_CODE != 0 ]; then [ -t 1 ] && echo -en \"\\033]0;E:[SR:Ps1]\\a\"; read -p \"Error, pausing...\"; read -p \"Press again to exit...\"; exit 1 ; else [ -t 1 ] && echo -en \"\\033]0;OK:[SR:Ps1]\\a\"; read -n1 -p Pausing...; exit 0; fi ; exit 0",
 								"shell_runner_ps1",
 								"cd \"$1\"; shift; shift; \"$@\";",
 								"powershell",
