@@ -74,8 +74,8 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 		let isNotebookGlobalHaveTermOpts: boolean | undefined = undefined;
 
 		if (notebook.cellCount > 0) {
-			for (const firstCellLines of notebook.cellAt(0).document.getText().split('\n')) {
-				const lTrimStart = firstCellLines.trimStart();
+			for (const firstCellOneLine of notebook.cellAt(0).document.getText().split('\n')) {
+				const lTrimStart = firstCellOneLine.trimStart();
 				if (lTrimStart !== '') {
 					const parseFirstCellDirectiveResult = ShNotebookSerializer.parseExtTermDirective(lTrimStart, true, patchedConfig, defaultExtTermRunConfParam ?? "default");
 					if ((parseFirstCellDirectiveResult.isLineExtTermDirective ?? false)) {
@@ -111,8 +111,35 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 			cells = cells.slice(0, 3);
 		}
 
+		let notebookPrevCellExtTermOpts: any = {};
+		let shouldNotebookPrevCellOverrideTermOpts: boolean = false;
+		if (cells.length > 0 && cells[0].index >= 2) {
+			const previousCell = notebook.cellAt(cells[0].index - 1);
+
+			for (const prevCellOneLine of previousCell.document.getText().split('\n')) {
+				const lTrimStart = prevCellOneLine.trimStart();
+				if (lTrimStart !== '') {
+					const parsePrevCellDirectiveResult = ShNotebookSerializer.parseExtTermDirective(lTrimStart, true, patchedConfig, defaultExtTermRunConfParam ?? "default");
+					if ((parsePrevCellDirectiveResult.isLineExtTermDirective ?? false)) {
+						shouldNotebookPrevCellOverrideTermOpts = true;
+						notebookPrevCellExtTermOpts = parsePrevCellDirectiveResult.cellExtTermOpts;
+					} else {
+						// has other line than directive, previous cell is not a pure directive cell, disable override
+						shouldNotebookPrevCellOverrideTermOpts = false;
+						break;
+					}
+				}
+			}
+			if (shouldNotebookPrevCellOverrideTermOpts === false) {
+				notebookPrevCellExtTermOpts = {};
+			}
+		}
+
 		let isExtTerm = false;
 		if (isNotebookGlobalHaveTermOpts) {
+			isExtTerm = true;
+		}
+		if (shouldNotebookPrevCellOverrideTermOpts) {
 			isExtTerm = true;
 		}
 
@@ -121,7 +148,7 @@ function getExecuteHandler(controller: vscode.NotebookController, defaultExtTerm
 			execution.start();
 			const cellContent = execution.cell.document.getText();
 
-			let cellExtTermOpts: any = COMMON_MERGICIAN(notebookGlobalExtTermOpts, {});
+			let cellExtTermOpts: any = COMMON_MERGICIAN(notebookGlobalExtTermOpts, notebookPrevCellExtTermOpts, {});
 			let runConfVariantIdent: string | undefined = undefined;
 
 			const cellLines = cellContent.split('\n');

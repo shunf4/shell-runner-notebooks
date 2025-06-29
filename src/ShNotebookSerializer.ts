@@ -223,12 +223,17 @@ export class ShNotebookSerializer implements NotebookSerializer {
         // let notebookGlobalExtTermMetadata = {};
 
         let currentCellSource: string[] = [];
+        let currentCellSourceHasNonBlankLine = false;
         let currentCellMetadata: any = {};
         let currentCellLanguageIdOverride: string | undefined = undefined;
+        let isCurrentCellPureEtDirective: boolean | undefined = undefined;
         let cellKind: NotebookCellKind | undefined;
 
         let lastLineIsBlank: boolean | undefined = undefined;
         let lastButOneLineIsBlank: boolean | undefined = undefined;
+
+        let isPrevCellPureDirective: boolean | undefined = undefined;
+        let prevCellLanguageId: string | undefined = undefined;
 
         const endIfNeededAndStartCell = (kind: NotebookCellKind) => {
             // If cellKind has a value, then we can add the cell we've just computed.
@@ -245,12 +250,16 @@ export class ShNotebookSerializer implements NotebookSerializer {
                     currentCellLanguageIdOverride,
                     currentCellMetadata,
                 ));
+                prevCellLanguageId = currentCellLanguageIdOverride;
+                isPrevCellPureDirective = isCurrentCellPureEtDirective;
             }
 
             // set initial new cell state
             currentCellSource = [];
+            currentCellSourceHasNonBlankLine = false;
             currentCellMetadata = {};
             currentCellLanguageIdOverride = undefined;
+            isCurrentCellPureEtDirective = undefined;
             cellKind = kind;
         };
 
@@ -276,13 +285,10 @@ export class ShNotebookSerializer implements NotebookSerializer {
                 lineTrim,
                 !currLineIsBlank
                     && (
-                        (currentCellSource.length === 0
-                            || currentCellSource.every(x => x.trim() === '')
-                        ) 
-                        || (
+                        (
                             (lastLineIsBlank ?? true)
                             && (lastButOneLineIsBlank ?? true)
-                        )
+                        ) || currentCellSourceHasNonBlankLine
                     ),
                 patchedConfig,
                 this.cellDefaultExtTermRunConfParam,
@@ -295,8 +301,7 @@ export class ShNotebookSerializer implements NotebookSerializer {
                 if (line.toLowerCase().indexOf("(((shnb:md)))") > -1
                     || line.toLowerCase().indexOf("{{{shnb:md}}}") > -1
                     || (lineTrim.startsWith('#') && lineTrim.substring(1).trimLeft().split(':', 2)[0].toLowerCase() === 'md')) {
-                    if (currentCellSource.length === 0
-                        || currentCellSource.every(x => x.trim() === '')
+                    if (!currentCellSourceHasNonBlankLine
                         || (
                             (lastLineIsBlank ?? true)
                             && (lastButOneLineIsBlank ?? true)
@@ -327,17 +332,33 @@ export class ShNotebookSerializer implements NotebookSerializer {
                 if (lineIsMarkdownDirective) {
                     currentCellMetadata.markupDirectiveOrigLine = line;
                 }
-                if (isLineExtTermDirective) {
-                    currentCellLanguageIdOverride = ((cellExtTermOpts?.languageId) || undefined);
+                currentCellLanguageIdOverride = undefined;
+                if (isLineExtTermDirective && currentCellLanguageIdOverride === undefined) {
+                    currentCellLanguageIdOverride = cellExtTermOpts?.languageId;
+                }
+                if (isPrevCellPureDirective && currentCellLanguageIdOverride === undefined) {
+                    currentCellLanguageIdOverride = prevCellLanguageId;
+                }
+            }
+
+            if (!currLineIsBlank) {
+                if (isLineExtTermDirective && !lineIsMarkdownDirective) {
+                    if (isCurrentCellPureEtDirective === undefined) {
+                        isCurrentCellPureEtDirective = true;
+                    }
+                } else {
+                    isCurrentCellPureEtDirective = false;
                 }
             }
             
             if (currKind === NotebookCellKind.Markup) {
                 if (!lineIsMarkdownDirective) {
                     currentCellSource.push(removePrefixForMarkdown(line));
+                    currentCellSourceHasNonBlankLine = true;
                 }
             } else {
                 currentCellSource.push(line);
+                currentCellSourceHasNonBlankLine = true;
             }
 
             lastButOneLineIsBlank = lastLineIsBlank;
